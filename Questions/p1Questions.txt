@@ -1,0 +1,11 @@
+1.  This should take 2 hours max.
+
+2.  Thought and Design: 1 hour
+    Programing: 1 hour
+    Debugging: 1 hour 
+    (Time to turn in): 2 months, sorry.
+
+    TOTAL: about 3 hours
+
+3:  Well, I was off about an hour in terms of workload. Much time was spent understanding how this worked. 
+    The percentage was about 66% accurate.
