@@ -29,6 +29,12 @@ import java.net.Socket;
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.TimeZone;
+import java.io.File;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.Date;
+import java.nio.file.Files;
 
 public class WebWorker implements Runnable
 {
@@ -55,9 +61,24 @@ public class WebWorker implements Runnable
 		{
 			InputStream is = socket.getInputStream();
 			OutputStream os = socket.getOutputStream();
-			readHTTPRequest(is);
-			writeHTTPHeader(os, "text/html");
-			writeContent(os);
+			// String respCode = "";
+			String desiredFilePath = readHTTPRequest(is);
+
+
+			File file = new File(desiredFilePath); // test to see what file is
+			System.err.println("THE FILE IS THERE: " + file.exists()); 
+			System.err.println("THIS IS THE FILE TYPE: " + getExtension(file)); // test to get file extension (this will help with p2)
+			System.err.println("THIS IS WANT FILE: " + desiredFilePath);  // test for desired file
+
+
+
+                               // This is LITERALLY the content type!!!!
+			writeHTTPHeader(os, "text/html", findFile(desiredFilePath)); // findFile should return the resp code array
+
+
+
+
+			writeContent(os, findFile(desiredFilePath), desiredFilePath);
 			os.flush();
 			socket.close();
 		}
@@ -69,12 +90,50 @@ public class WebWorker implements Runnable
 		return;
 	}
 
+
+
+	public String getExtension(File inputFile) {
+
+		String fileExten = "";
+		try {
+			fileExten = Files.probeContentType(inputFile.toPath());
+		} catch (IOException e) {
+			System.err.println("ERROR: Unable to get file type.");
+		}	
+		return fileExten;
+	}
+
+
+
+	/**
+	 * 
+	 * @param filepath
+	 * @return
+	 * 
+	 */
+	public String findFile(String filePath) {
+		File html_file = new File(filePath);
+		
+
+		if(getExtension(html_file).contains("plain"))
+			return "400";
+
+		else if(html_file.exists()  )
+			return "200";
+
+		else
+			return "404";
+	}
+
+
+
 	/**
 	 * Read the HTTP request header.
 	 **/
-	private void readHTTPRequest(InputStream is)
+	private String readHTTPRequest(InputStream is)
 	{
 		String line;
+		String filePath = ""; // created filepath
 		BufferedReader r = new BufferedReader(new InputStreamReader(is));
 		while (true)
 		{
@@ -84,6 +143,16 @@ public class WebWorker implements Runnable
 					Thread.sleep(1);
 				line = r.readLine();
 				System.err.println("Request line: (" + line + ")");
+				if (line.contains("GET")) {
+					filePath = line.split(" ")[1];
+				
+					if (filePath.equals("/"))
+						filePath = "/test.html";
+					
+					filePath = filePath.substring(1);
+					return filePath;
+				}	
+
 				if (line.length() == 0)
 					break;
 			}
@@ -93,7 +162,7 @@ public class WebWorker implements Runnable
 				break;
 			}
 		}
-		return;
+		return filePath;
 	}
 
 	/**
@@ -103,13 +172,23 @@ public class WebWorker implements Runnable
 	 *          is the OutputStream object to write to
 	 * @param contentType
 	 *          is the string MIME content type (e.g. "text/html")
+	 * 
+	 * NOTE this is the second to last step....this is done AFTER GET request 
+	 * has been processed, whether or not the file was found.
 	 **/
-	private void writeHTTPHeader(OutputStream os, String contentType) throws Exception
+	private void writeHTTPHeader(OutputStream os, String contentType, String resCode) throws Exception 
 	{
 		Date d = new Date();
 		DateFormat df = DateFormat.getDateTimeInstance();
 		df.setTimeZone(TimeZone.getTimeZone("GMT"));
-		os.write("HTTP/1.1 200 OK\n".getBytes());
+
+		if (resCode.equals("200"))
+			os.write("HTTP/1.1 200 OK\n".getBytes()); // this if only it works and file exists *****
+		else if (resCode.equals("400"))
+			os.write("HTTP/1.1 400 Bad Request".getBytes());
+		else
+			os.write("HTTP/1.1 404 Not Found".getBytes());
+			
 		os.write("Date: ".getBytes());
 		os.write((df.format(d)).getBytes());
 		os.write("\n".getBytes());
@@ -130,11 +209,40 @@ public class WebWorker implements Runnable
 	 * @param os
 	 *          is the OutputStream object to write to
 	 **/
-	private void writeContent(OutputStream os) throws Exception
+	private void writeContent(OutputStream os, String resCode, String file) throws Exception
 	{
-		os.write("<html><head></head><body>\n".getBytes());
-		os.write("<h3>My web server works!</h3>\n".getBytes());
-		os.write("</body></html>\n".getBytes());
+			
+		// if file was found and allowed
+		if(resCode.equals("200")) {
+
+			try {
+				Date date = new Date();
+				BufferedReader reader = new BufferedReader(new FileReader(file));
+				String line = reader.readLine();
+				System.err.println("DATE DUBUG: " + date.toString());
+				
+				while( line != null) {
+					line = line.replace("<cs371date>", date.toString());
+					line = line.replace("<cs371server>", "ThisTookLongerThanNeeded");
+					os.write(line.getBytes());
+					line = reader.readLine();
+					
+				}
+				reader.close();
+			} catch (IOException e) {
+				System.err.println("Error reading in file.");
+			} 
+		}
+		else if (resCode.equals("400")) {
+			os.write("<html><head></head><body>\n".getBytes());
+			os.write("<h3>ERROR 400 BAD REQUEST! </h3>\n".getBytes());
+			os.write("</body></html>\n".getBytes());
+		}
+		else {
+			os.write("<html><head></head><body>\n".getBytes());
+			os.write("<h3>ERROR 404 NOT FOUND! </h3>\n".getBytes());
+			os.write("</body></html>\n".getBytes());
+		}	
 	}
 
 } // end class

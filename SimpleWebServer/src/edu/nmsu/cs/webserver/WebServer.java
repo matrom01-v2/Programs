@@ -21,7 +21,7 @@ public class WebServer
 {
 	private ServerSocket	socket;
 
-	private boolean				running;
+	private boolean			running;
 
 	/**
 	 * Constructor
@@ -84,7 +84,7 @@ public class WebServer
 	 **/
 	public static void main(String args[])
 	{
-		int port = 8080;
+		int portID = 8080;
 		if (args.length > 1)
 		{
 			System.err.println("Usage: java Webserver <portNumber>");
@@ -94,7 +94,7 @@ public class WebServer
 		{
 			try
 			{
-				port = Integer.parseInt(args[0]);
+				portID = Integer.parseInt(args[0]);
 			}
 			catch (Exception e)
 			{
@@ -103,7 +103,7 @@ public class WebServer
 			}
 		}
 		WebServer server = new WebServer();
-		if (!server.start(port))
+		if (!server.start(portID))
 		{
 			System.err.println("Execution failed!");
 		}
