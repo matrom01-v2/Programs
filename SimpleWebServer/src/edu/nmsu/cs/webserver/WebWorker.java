@@ -167,7 +167,7 @@ public class WebWorker implements Runnable
 					filePath = line.split(" ")[1];
 				
 					if (filePath.equals("/"))
-						filePath = "/test.html";
+						filePath = "/hello.html";
 					
 					filePath = filePath.substring(1);
 					return filePath;
