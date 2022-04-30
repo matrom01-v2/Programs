@@ -35,6 +35,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.Date;
 import java.nio.file.Files;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 
 public class WebWorker implements Runnable
 {

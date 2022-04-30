@@ -30,9 +30,9 @@ public class RacingScore1
 
 	public void recordScores(int s1, int s2, int s3)
 	{
-		score1 = s1;
-		score2 = s2;
-		score3 = s3;
+		score1 = s1;  // 8
+		score2 = s2;  // 9
+		score3 = s3;  // 6
 	}
 
 	public int overallScore()
@@ -42,8 +42,10 @@ public class RacingScore1
 			s = score2;
 		else
 			s = score1;
+
 		if (s > score3)
 			s = score3;
+		
 		s = (score1 + score2 + score3) - s;
 		return s;
 	}
