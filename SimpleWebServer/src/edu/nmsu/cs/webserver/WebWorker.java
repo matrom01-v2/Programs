@@ -22,13 +22,16 @@ package edu.nmsu.cs.webserver;
  **/
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.text.DateFormat;
+import java.util.Base64;
 import java.util.Date;
 import java.util.TimeZone;
+import java.util.Base64.Encoder;
 import java.io.File;
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -36,6 +39,10 @@ import java.io.IOException;
 import java.util.Date;
 import java.nio.file.Files;
 import javax.imageio.ImageIO;
+
+
+import javax.lang.model.util.ElementScanner14;
+
 import java.awt.image.BufferedImage;
 
 public class WebWorker implements Runnable
@@ -68,9 +75,16 @@ public class WebWorker implements Runnable
 
 
 			File file = new File(desiredFilePath); // test to see what file is
+			File imageFile = new File(desiredFilePath);
+			
+			//if (getExtension(file).equals("image/png") || getExtension(file).equals("image/jpeg") || getExtension(file).equals("image/gif") )
+				
+				
+
 			System.err.println("THE FILE IS THERE: " + file.exists()); 
 			System.err.println("THIS IS THE FILE TYPE: " + getExtension(file)); // test to get file extension (this will help with p2)
 			System.err.println("THIS IS WANT FILE: " + desiredFilePath);  // test for desired file
+			System.err.println("IS IMAGE: " + isImageFile(file));
 
 
 
@@ -80,7 +94,7 @@ public class WebWorker implements Runnable
 
 
 
-			writeContent(os, findFile(desiredFilePath), desiredFilePath);
+			writeContent(os, findFile(desiredFilePath), desiredFilePath, file);
 			os.flush();
 			socket.close();
 		}
@@ -127,7 +141,13 @@ public class WebWorker implements Runnable
 			return "404";
 	}
 
+	public boolean isImageFile(File file) {
 
+		if (getExtension(file).equals("image/jpeg") ||getExtension(file).equals("image/png") )
+			return true;
+
+		return false;
+	}
 
 	/**
 	 * Read the HTTP request header.
@@ -149,7 +169,7 @@ public class WebWorker implements Runnable
 					filePath = line.split(" ")[1];
 				
 					if (filePath.equals("/"))
-						filePath = "/test.html";
+						filePath = "/hello.html";
 					
 					filePath = filePath.substring(1);
 					return filePath;
@@ -211,11 +231,11 @@ public class WebWorker implements Runnable
 	 * @param os
 	 *          is the OutputStream object to write to
 	 **/
-	private void writeContent(OutputStream os, String resCode, String file) throws Exception
+	private void writeContent(OutputStream os, String resCode, String file, File servFile) throws Exception
 	{
 			
 		// if file was found and allowed
-		if(resCode.equals("200")) {
+		if(resCode.equals("200") && isImageFile(servFile) != true) {
 
 			try {
 				Date date = new Date();
@@ -234,6 +254,14 @@ public class WebWorker implements Runnable
 			} catch (IOException e) {
 				System.err.println("Error reading in file.");
 			} 
+		}
+		else if (resCode.equals("200") && isImageFile(servFile) == true) {
+			BufferedImage image = ImageIO.read(servFile);
+			ByteArrayOutputStream output = new ByteArrayOutputStream();
+			ImageIO.write(image, "png", output);
+			String servImage = "<img src=\"" + servFile + "\" alt = \"fish\"";
+			os.write(servImage.getBytes()); 
+			
 		}
 		else if (resCode.equals("400")) {
 			os.write("<html><head></head><body>\n".getBytes());
