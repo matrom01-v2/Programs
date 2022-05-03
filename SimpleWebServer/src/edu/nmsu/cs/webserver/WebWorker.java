@@ -77,10 +77,10 @@ public class WebWorker implements Runnable
 			File file = new File(desiredFilePath); // test to see what file is
 			File imageFile = new File(desiredFilePath);
 			
-			//if (getExtension(file).equals("image/png") || getExtension(file).equals("image/jpeg") || getExtension(file).equals("image/gif") )
+		   // if (getExtension(file).equals("image/png") || getExtension(file).equals("image/jpeg") || getExtension(file).equals("image/gif") )
 				
 				
-
+           // haha ur bad
 			System.err.println("THE FILE IS THERE: " + file.exists()); 
 			System.err.println("THIS IS THE FILE TYPE: " + getExtension(file)); // test to get file extension (this will help with p2)
 			System.err.println("THIS IS WANT FILE: " + desiredFilePath);  // test for desired file
